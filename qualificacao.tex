@@ -720,150 +720,40 @@ CYGNO (2024).}
 \label{chap:dissertation}
 %%==========================================================
 
-Esta seção apresenta os resultados da dissertação de mestrado do
-autor~\cite{lopes2019study} de forma sintética, com o objetivo de estabelecer
-a \emph{ponte narrativa} entre o trabalho já realizado e as questões que
-motivam o presente doutorado. A mensagem central desta seção é: \textit{``a
-U-Net funcionou bem — mas até onde ela vai em baixas energias?''}
+Este capítulo resume os resultados da dissertação de mestrado do
+autor~\cite{lopes2019study}, estabelecendo a ponte narrativa entre o trabalho
+realizado e as questões que motivam o presente doutorado.
 
-\section{Contexto e Objetivos}
+\section{Metodologia e Filtros Avaliados}
 \label{sec:dissertation_context}
 
-A dissertação de mestrado, intitulada \textit{``Impact of Filtering on CYGNO's
-Experiment''}, propôs e validou uma metodologia de avaliação de técnicas de
-seleção de pixels para o Experimento CYGNO, utilizando dados de simulação como
-referência de verdade (\textit{ground truth}). O objetivo era determinar se
-filtros digitais clássicos ou uma rede neural convolucional poderiam melhorar
-a etapa de seleção de pixels do algoritmo de reconstrução, com impacto direto
-na qualidade da estimativa de energia e no tempo de processamento.
-
-\section{Ambiente de Avaliação}
-\label{sec:dissertation_env}
-
-O ambiente de avaliação proposto na dissertação, cujo diagrama é apresentado
-na Figura~\ref{fig:simulation_env}, consiste em:
-\begin{enumerate}
-    \item \textbf{Geração de imagens simuladas}: imagens de $2048 \times 2048$
-    produzidas com Geant4~\cite{incerti2010geant4} para energias de 1, 3, 6,
-    10, 30 e 60~keV para recuos eletrônicos (ER) e nucleares (NR), com 100
-    imagens por combinação;
-    \item \textbf{Inserção de ruído realista}: ruído eletrônico Monte Carlo
-    amostrado da distribuição real de pixels do detector (6.478 imagens de
-    ruído);
-    \item \textbf{Subtração de pedestal}: remoção da média do ruído
-    pixel a pixel;
-    \item \textbf{Aplicação dos filtros}: cada filtro/parâmetro é aplicado e
-    o resultado é binarizado com um limiar variável;
-    \item \textbf{Avaliação por F1-score}: Precisão e Revocação são calculados
-    pixel a pixel em relação ao \textit{ground truth} (threshold zero na imagem
-    de simulação pura).
-\end{enumerate}
+A dissertação propôs uma metodologia de avaliação baseada em dados de simulação
+(Geant4, energias de 1 a 60~keV, ER e NR) combinados com ruído real do
+detector, utilizando o F1-score como métrica principal — adequada ao extremo
+desbalanceamento de classes (${\sim}0{,}1\%$ de sinal). Foram comparados
+filtros de média ($W=17$), gaussiano ($W=17$), mediana ($W=15$), a rede neural
+U-Net~\cite{ronneberger2015u} e o algoritmo original do CYGNO (limiarização
+por $n \cdot \sigma_{\text{ruído}}$). A Figura~\ref{fig:simulation_env}
+apresenta o diagrama do ambiente de avaliação.
 
 \begin{figure}[H]
 \centering
 \includegraphics[width=\textwidth]{image_files/diagrama_dissertacao.pdf}
 \caption{Diagrama do ambiente de avaliação proposto na dissertação de
-mestrado. O fluxo recebe imagens de simulação e ruído real como entrada,
-processa com diferentes filtros/algoritmos e avalia o desempenho pela métrica
-F1-score comparando a saída com o \textit{ground truth}.}
+mestrado. Imagens de simulação e ruído real são combinadas, processadas por
+cada filtro/algoritmo e avaliadas pela métrica F1-score.}
 \label{fig:simulation_env}
 \end{figure}
 
-\section{Métricas de Avaliação}
-\label{sec:metrics}
+\section{Resultados Principais}
+\label{sec:dissertation_results}
 
-As métricas Precisão e Revocação, definidas pelas
-Equações~\ref{eq:precision} e~\ref{eq:recall}, são adequadas ao problema de
-classes altamente desbalanceadas presente no CYGNO:
-\begin{equation}
-    \text{Precisão} = \frac{VP}{VP + FP}
-    \label{eq:precision}
-\end{equation}
-\begin{equation}
-    \text{Revocação} = \frac{VP}{VP + FN}
-    \label{eq:recall}
-\end{equation}
-onde $VP$ são os pixels de sinal corretamente classificados, $FP$ são os
-pixels de fundo classificados incorretamente como sinal e $FN$ são os pixels
-de sinal classificados incorretamente como fundo.
-
-O F1-score é a média harmônica de Precisão e Revocação:
-\begin{equation}
-    F_1 = \frac{2 \cdot \text{Precisão} \cdot \text{Revocação}}{\text{Precisão} + \text{Revocação}} = \frac{2 \cdot VP}{2 \cdot VP + FP + FN}
-    \label{eq:f1}
-\end{equation}
-
-Para cada algoritmo, uma curva Precisão-Revocação é construída variando o
-limiar de binarização. O \textbf{máximo F1-score} ao longo dessa curva é
-utilizado como indicador de desempenho, conforme ilustrado na
-Figura~\ref{fig:pr_curve_example}.
-
-\begin{figure}[H]
-\centering
-\includegraphics[width=0.60\textwidth]{image_files/precision-recall-example.png}
-\caption{Exemplo de curva Precisão-Revocação para um filtro. O máximo
-F1-score, indicado na curva, é o indicador de desempenho utilizado para
-comparação entre algoritmos.}
-\label{fig:pr_curve_example}
-\end{figure}
-
-\section{Filtros Avaliados}
-\label{sec:filters}
-
-Foram avaliados quatro algoritmos de seleção de pixels, além do algoritmo
-original do experimento:
-\begin{itemize}
-    \item \textbf{Filtro de média} (linear): substitui cada pixel pela média
-    dos seus vizinhos em uma janela $W \times W$. Janela ótima: $W = 17$;
-    \item \textbf{Filtro gaussiano} (linear): média ponderada por uma função
-    gaussiana 2D. Janela ótima: $W = 17$;
-    \item \textbf{Filtro de mediana} (não-linear): substitui cada pixel pela
-    mediana dos seus vizinhos. Janela ótima: $W = 15$;
-    \item \textbf{U-Net}~\cite{ronneberger2015u}: rede neural convolucional
-    totalmente convolucional com arquitetura encoder-decoder, treinada para
-    segmentação semântica pixel a pixel. Treinada com 10.000 imagens
-    aumentadas (7.000 treino / 3.000 validação), 50 épocas, função de perda
-    entropia cruzada binária, otimizador Adam (lr~=~0,02);
-    \item \textbf{Algoritmo original do CYGNO}: limiarização por
-    $n \cdot \sigma_{\text{ruído}}$ seguida de redução de ruído. Usado como
-    referência de comparação.
-\end{itemize}
-
-As Figuras~\ref{fig:f1_median}, \ref{fig:f1_gaussian}
-e~\ref{fig:f1_mean} mostram a variação do F1-score médio em função do
-parâmetro de janela para cada filtro clássico, permitindo identificar o ponto
-ótimo de operação de cada um.
-
-\begin{figure}[H]
-\centering
-\includegraphics[width=0.70\textwidth]{image_files/median_f1.png}
-\caption{F1-score em função do parâmetro de janela para o filtro de mediana.
-O ponto ótimo encontra-se em $W = 15$.}
-\label{fig:f1_median}
-\end{figure}
-
-\begin{figure}[H]
-\centering
-\includegraphics[width=0.70\textwidth]{image_files/gaussian_f1.png}
-\caption{F1-score em função do parâmetro de janela para o filtro gaussiano.
-O ponto ótimo encontra-se em $W = 17$.}
-\label{fig:f1_gaussian}
-\end{figure}
-
-\begin{figure}[H]
-\centering
-\includegraphics[width=0.70\textwidth]{image_files/mean_f1.png}
-\caption{F1-score em função do parâmetro de janela para o filtro de média.
-O ponto ótimo encontra-se em $W = 17$.}
-\label{fig:f1_mean}
-\end{figure}
-
-\section{Resultados de Seleção de Pixels}
-\label{sec:dissertation_pixel}
-
-A Tabela~\ref{tab:f1_results} apresenta o resumo dos resultados de F1-score
-para cada algoritmo, calculado sobre todos os eventos e energias do conjunto
-de teste.
+A Tabela~\ref{tab:f1_results} sintetiza o desempenho de seleção de pixels.
+A U-Net alcançou o melhor F1-score (0,873), com a menor variância entre
+algoritmos, superando o filtro de mediana (0,820) e, especialmente, o
+algoritmo original (0,137). Esse resultado evidencia que a limiarização
+simples por $n \cdot \sigma$ é inadequada para a seleção de pixels em baixa
+razão sinal-ruído.
 
 \begin{table}[H]
 \centering
@@ -872,7 +762,7 @@ desvio padrão sobre todos os eventos e energias do conjunto de teste).}
 \label{tab:f1_results}
 \begin{tabular}{lcc}
 \toprule
-\textbf{Algoritmo} & \textbf{Parâmetro ótimo} & \textbf{F1-score ($\mu \pm \sigma$)} \\
+\textbf{Algoritmo} & \textbf{Parâmetro} & \textbf{F1-score ($\mu \pm \sigma$)} \\
 \midrule
 U-Net              & (treinado)  & $\mathbf{0{,}873 \pm 0{,}060}$ \\
 Mediana            & $W = 15$    & $0{,}820 \pm 0{,}127$           \\
@@ -884,99 +774,28 @@ CYGNO original     & ---         & $0{,}137 \pm 0{,}127$           \\
 \fonte{Lopes (2022).}
 \end{table}
 
-Os resultados revelam três achados principais:
-\begin{enumerate}
-    \item \textbf{A U-Net apresenta o melhor desempenho global}: F1-score de
-    0,873 — superior em ${\sim}6\%$ ao filtro de mediana (0,820) e em
-    ${\sim}536\%$ ao algoritmo original do experimento (0,137);
-    \item \textbf{A variância da U-Net é a menor} ($\sigma = 0{,}060$),
-    indicando comportamento mais consistente entre diferentes energias e tipos
-    de partícula;
-    \item \textbf{O algoritmo original apresenta desempenho dramaticamente
-    inferior}: o F1-score de 0,137 indica que a limiarização simples não é
-    adequada para a seleção de pixels quando a razão sinal-ruído é baixa.
-\end{enumerate}
-
-\section{Resultados de Reconstrução de Energia}
-\label{sec:dissertation_energy}
-
-Uma vez selecionados os parâmetros ótimos de cada filtro, eles foram integrados
-ao pipeline de reconstrução completo para avaliar o impacto na estimativa de
-energia em dados de simulação. A metodologia utiliza regressão linear
-$E_i = \alpha \cdot E_o + \beta$ entre energia de entrada ($E_i$) e energia
-reconstruída ($E_o$), avaliada pelo coeficiente de determinação $R^2$ e
-testada por normalidade dos resíduos (Shapiro-Wilk, $p > 0{,}05$).
-
-A Figura~\ref{fig:r2_results} mostra os valores de $R^2$ para cada algoritmo
-em função da energia, para recuos eletrônicos e nucleares.
-
-\begin{figure}[H]
-\centering
-\includegraphics[width=0.75\textwidth]{image_files/r_square_result_sim.png}
-\caption{Coeficiente de determinação $R^2$ da regressão linear entre energia
-de entrada e energia reconstruída, para cada algoritmo e energia, em dados de
-simulação. Valores próximos de 1 indicam boa qualidade de reconstrução.
-Fonte: Lopes (2022).}
-\label{fig:r2_results}
-\end{figure}
-
-Os resultados mostraram que:
-\begin{itemize}
-    \item A U-Net e o filtro de mediana apresentam $R^2$ mais próximo de 1
-    para todas as energias avaliadas, especialmente abaixo de 6~keV;
-    \item O algoritmo original do CYGNO apresenta os piores resultados de
-    $R^2$ em toda a faixa de energias;
-    \item A eficiência de detecção de clusters é maior para U-Net e mediana,
-    especialmente em baixas energias.
-\end{itemize}
-
-\section{Resultados em Dados Reais e Tempo de Processamento}
-\label{sec:dissertation_real}
-
-Para validar a metodologia em dados reais, foram processadas ${\sim}868$
-imagens adquiridas com uma fonte de $^{55}$Fe (5,9~keV). Os resultados
-demonstraram que:
-\begin{itemize}
-    \item O filtro de mediana (com 300.000 pontos após limiarização) reproduz
-    a distribuição de energia reconstruída pelo algoritmo original do CYGNO
-    com fidelidade estatística, confirmada pelo teste de Kolmogorov-Smirnov
-    ($KS = 0{,}051$, $p\text{-valor} = 0{,}514 > 0{,}05$);
-    \item O \textbf{tempo de processamento} com o filtro de mediana é
-    \textbf{4,3 vezes menor} que com o algoritmo original: 67,6~s/imagem vs.\
-    293,8~s/imagem.
-\end{itemize}
-
-A Figura~\ref{fig:time_results} mostra o comparativo de tempo de
-processamento por etapa entre os algoritmos avaliados.
-
-\begin{figure}[H]
-\centering
-\includegraphics[width=0.75\textwidth]{image_files/time_total.png}
-\caption{Tempo de processamento total e por etapa para cada algoritmo,
-variando o número de pontos após a limiarização. O algoritmo original do CYGNO
-(Cygno) apresenta tempo significativamente maior em relação à U-Net e ao filtro
-de mediana. Fonte: Lopes (2022).}
-\label{fig:time_results}
-\end{figure}
-
-A redução de tempo é atribuída à eliminação do passo computacionalmente
-custoso de redução de ruído e à diminuição de dois ordens de magnitude no
-número de pixels enviados ao iDBSCAN — de ${\sim}50{.}000$ no algoritmo
-original para ${\sim}450$ com a U-Net e ${\sim}700$ com o filtro de mediana.
+Na reconstrução de energia em simulação, a U-Net e o filtro de mediana
+apresentaram $R^2$ mais próximo de 1 para todas as energias, enquanto o
+algoritmo original obteve os piores valores. Em dados reais ($^{55}$Fe,
+5,9~keV), o filtro de mediana reproduziu a distribuição de energia do
+algoritmo original com fidelidade estatística (Kolmogorov-Smirnov:
+$p = 0{,}514$), com tempo de processamento \textbf{4,3 vezes menor}
+(67,6~s vs.\ 293,8~s por imagem). A redução é atribuída à eliminação do
+algoritmo redutor de ruído e à diminuição de duas ordens de magnitude no
+número de pixels enviados ao iDBSCAN.
 
 \section{A Pergunta em Aberto}
 \label{sec:dissertation_conclusion}
 
-Os resultados da dissertação estabelecem claramente que a U-Net é a melhor
-abordagem para seleção de pixels no CYGNO. Contudo, os dados de simulação
-utilizados cobriam apenas energias acima de 1~keV — um regime onde o sinal
-ainda é suficientemente distinguível do ruído para ser bem caracterizado.
-
-A questão fundamental que motiva o presente doutorado é: \textbf{qual é o
-desempenho da U-Net para eventos de energias muito baixas, na faixa de 0,25 a
-1~keV?} Essa faixa é de máximo interesse físico para WIMPs leves e apresenta
-a maior dificuldade de seleção de pixels, pois o sinal de evento é praticamente
-indistinguível do ruído eletrônico por métodos clássicos.
+Os resultados da dissertação demonstraram que a U-Net é a melhor abordagem
+para seleção de pixels no CYGNO. Contudo, os dados utilizados cobriam apenas
+energias \textbf{acima de 1~keV} — regime onde o sinal ainda é
+suficientemente distinguível do ruído. A questão fundamental que motiva o
+presente doutorado é: \textbf{qual é o desempenho da U-Net para eventos de
+energias muito baixas, na faixa de 0,25 a 1~keV?} Essa faixa corresponde ao
+regime de máximo interesse físico para WIMPs leves e apresenta a maior
+dificuldade de seleção de pixels — o sinal é praticamente indistinguível do
+ruído eletrônico por métodos clássicos.
 
 
 %%==========================================================
@@ -984,38 +803,72 @@ indistinguível do ruído eletrônico por métodos clássicos.
 \label{chap:methodology}
 %%==========================================================
 
-\section{Mudanças em Relação ao Trabalho Anterior}
+\section{Visão Geral e Mudanças em Relação ao Trabalho Anterior}
 \label{sec:changes}
 
-Em relação à dissertação de mestrado, o presente trabalho introduz três
-mudanças principais:
+O presente trabalho estende a investigação iniciada na dissertação de mestrado
+com três mudanças fundamentais:
 \begin{enumerate}
-    \item \textbf{Novos dados de simulação}: energias de 0,25; 0,5 e 1~keV
-    para ER e NR, combinados com ruído real de \textit{runs} mais recentes
-    do experimento (12163, 12166, 12168 e 12175);
+    \item \textbf{Novos dados de simulação em baixas energias}: energias de
+    0,25; 0,5 e 1~keV para ER e NR, combinados com ruído real de
+    \textit{runs} mais recentes do experimento (12163, 12166, 12168 e 12175);
     \item \textbf{Nova função de perda — Focal Loss}: substituição da
-    entropia cruzada binária pela Focal Loss~\cite{lin2017focal}, com
-    parâmetro $\alpha = 4$, para lidar de forma mais eficaz com o extremo
-    desbalanceamento de classes em baixas energias;
-    \item \textbf{Integração completa ao pipeline de reconstrução}: a U-Net
-    treinada é inserida como substituta das etapas de filtragem e redução de
-    ruído, com avaliação \textit{end-to-end} dos resultados.
+    entropia cruzada binária pela Focal Loss~\cite{lin2017focal} com
+    $\alpha = 4$, para priorizar a revocação no regime de extremo
+    desbalanceamento;
+    \item \textbf{Avaliação \textit{end-to-end} no pipeline de reconstrução}:
+    a U-Net treinada é integrada ao pipeline completo, com métricas de
+    detecção de eventos, tempo de processamento e estimativa de energia.
 \end{enumerate}
+
+Todas essas mudanças são motivadas pelo objetivo de verificar o desempenho da
+U-Net na faixa de energia de máximo interesse físico para a detecção de
+matéria escura leve.
+
+\section{Seleção de Pixels como Segmentação Semântica}
+\label{sec:semantic_seg}
+
+A tarefa de seleção de pixels pode ser formulada como um problema de
+\textbf{segmentação semântica binária}: dado uma imagem de
+$2048 \times 2048$ pixels, classificar cada pixel individualmente como
+\textit{sinal} (contém contribuição de um evento de partícula) ou
+\textit{fundo} (contém apenas ruído eletrônico). Diferentemente de uma
+classificação global da imagem, a segmentação semântica preserva a resolução
+espacial completa, permitindo a localização precisa dos pixels de evento.
+
+Essa formulação apresenta três desafios principais no contexto do CYGNO:
+\begin{itemize}
+    \item \textbf{Extremo desbalanceamento de classes}: apenas ${\sim}0{,}1\%$
+    dos pixels são sinal — uma razão de ${\sim}1{:}1000$ entre classes;
+    \item \textbf{Baixa razão sinal-ruído}: para energias abaixo de 1~keV,
+    os pixels de sinal possuem intensidades comparáveis ao ruído eletrônico;
+    \item \textbf{Variabilidade morfológica}: os traços de recuos eletrônicos
+    (ER) e nucleares (NR) apresentam morfologias distintas — ER produzem
+    traços mais longos e curvos, enquanto NR geram deposições mais compactas
+    e pontuais. Abaixo de 10~keV, as distribuições de intensidade de ambos
+    os tipos tornam-se muito similares, dificultando a segmentação.
+\end{itemize}
+
+A abordagem baseada em visão computacional clássica (filtros espaciais
+seguidos de limiarização) requer a definição manual de parâmetros que
+dependem da energia e do tipo de partícula. A U-Net, por outro lado, aprende
+esses padrões diretamente dos dados de treinamento, substituindo a engenharia
+manual de características por um processo de otimização.
 
 \section{Geração de Dados de Treinamento}
 \label{sec:data_generation}
 
-O processo de geração de dados de treinamento segue o protocolo:
+O processo de geração de dados de treinamento é um aspecto crítico da
+metodologia. O pipeline completo é ilustrado na
+Figura~\ref{fig:training_flow} e consiste nos seguintes passos:
+
 \begin{enumerate}
-    \item Imagens de simulação Geant4 para energias de 0,25 a 60~keV (ER e
-    NR) são combinadas com ruído eletrônico real dos \textit{runs} recentes;
-    \item O \textit{ground truth} é definido com \textit{threshold} zero na
-    imagem de simulação pura (sem ruído): pixels com
-    $I_{\text{truth}} > 0$ são rotulados como~1 (sinal), demais como~0
-    (fundo);
-    \item Transformações de rotação e translação são aplicadas
-    \emph{antes} da inserção do ruído, preservando as características reais
-    do ruído do detector e evitando \textit{overfitting}:
+    \item \textbf{Seleção de imagens de simulação}: imagens Geant4 para
+    energias de 0,25 a 60~keV (ER e NR) são selecionadas aleatoriamente do
+    conjunto de simulação;
+    \item \textbf{Aumento de dados}: transformações de rotação (ângulo
+    $\theta$ aleatório) e translação ($x_0, y_0$) são aplicadas \emph{antes}
+    da inserção do ruído, seguindo a equação:
 \end{enumerate}
 
 \begin{equation}
@@ -1030,42 +883,95 @@ O processo de geração de dados de treinamento segue o protocolo:
     \label{eq:augmentation}
 \end{equation}
 
+\begin{enumerate}
+    \setcounter{enumi}{2}
+    \item \textbf{Definição do \textit{ground truth}}: a máscara binária é
+    obtida com \textit{threshold} zero na imagem de simulação pura:
+    $I_{\text{truth}}[x,y] > 0 \Rightarrow$ sinal (1); caso contrário,
+    fundo (0);
+    \item \textbf{Inserção de ruído real}: uma imagem de ruído é selecionada
+    aleatoriamente dentre os \textit{runs} disponíveis (12163, 12166, 12168,
+    12175) e adicionada à imagem simulada, preservando as características
+    reais do detector;
+    \item \textbf{Subtração de pedestal}: o mapa de pedestal é subtraído,
+    reproduzindo a primeira etapa do pipeline de reconstrução.
+\end{enumerate}
+
+A aplicação das transformações de aumento \emph{antes} da inserção do ruído é
+uma decisão de projeto importante: se as transformações fossem aplicadas após
+a adição de ruído, os padrões de ruído seriam rotacionados junto com o evento,
+criando artefatos que não correspondem à realidade do detector. Da mesma
+forma, o ruído é selecionado aleatoriamente dentre os \textit{runs}
+disponíveis para expor a rede a diferentes condições operacionais.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\textwidth]{quali_images/cygno_preprocessing_flow.png}
+\caption{Pipeline de geração de dados de treinamento da U-Net. Imagens de
+simulação (0,25--60~keV, ER e NR) são combinadas com ruído real de
+\textit{runs} recentes (12163, 12166, 12168 e 12175) após aumento de dados
+por rotação e translação. O \textit{threshold} zero na simulação pura define
+a máscara de \textit{ground truth}. Fonte: apresentação à colaboração CYGNO
+(2024).}
+\label{fig:training_flow}
+\end{figure}
+
 O conjunto de dados resultante é dividido em:
 \begin{itemize}
-    \item \textbf{2.000 imagens de treino};
-    \item \textbf{500 imagens de validação};
-    \item \textbf{500 imagens de teste}.
+    \item \textbf{2.000 imagens de treino}: abrangendo todas as energias e
+    tipos de partícula, com ruído real de diferentes \textit{runs};
+    \item \textbf{500 imagens de validação}: monitoramento do
+    \textit{overfitting} durante o treinamento;
+    \item \textbf{500 imagens de teste}: avaliação final, com imagens nunca
+    vistas durante o treinamento.
 \end{itemize}
+
+Para a avaliação no pipeline de reconstrução, as imagens de teste são
+restringidas à faixa de \textbf{0,25 a 1~keV}, com exatamente \textbf{1
+evento} (NR ou ER) por imagem — permitindo uma avaliação precisa da taxa de
+detecção e da estimativa de energia.
 
 \section{Arquitetura da U-Net}
 \label{sec:unet_architecture}
 
-A arquitetura U-Net~\cite{ronneberger2015u} foi adaptada para o domínio do
-CYGNO, com camadas de entrada e saída redimensionadas para $2048 \times 2048$
-pixels. A rede possui estrutura encoder-decoder com conexões de salto
-(\textit{skip connections}):
+A U-Net~\cite{ronneberger2015u}, originalmente proposta para segmentação de
+imagens biomédicas, é uma rede totalmente convolucional (FCN) com arquitetura
+encoder-decoder e conexões de salto (\textit{skip connections}). Sua
+aplicação ao CYGNO é particularmente adequada por duas razões: (1) funciona
+bem com conjuntos de dados de tamanho moderado, e (2) preserva a informação
+espacial de alta resolução necessária para a localização precisa dos pixels
+de evento.
+
+A arquitetura foi adaptada para acomodar imagens de $2048 \times 2048$ pixels
+e possui a seguinte estrutura:
 \begin{itemize}
     \item \textbf{Encoder (contração)}: 5 estágios de dupla convolução com
     \textit{batch normalization} e ativação ReLU, seguidos de
-    max-pooling. Mapas de características: 16 → 32 → 48 → 64 → 128 filtros;
-    \item \textbf{Bottleneck}: duas convoluções com 128 filtros na resolução
-    mínima ($64 \times 64$);
-    \item \textbf{Decoder (expansão)}: 5 estágios de \textit{upsampling} com
-    concatenação das ativações correspondentes do encoder, seguidos de dupla
-    convolução;
+    max-pooling $2 \times 2$. Os mapas de características crescem em
+    profundidade: 16 $\to$ 32 $\to$ 48 $\to$ 64 $\to$ 128 filtros, enquanto
+    a resolução espacial é reduzida progressivamente de $2048^2$ até
+    $64^2$;
+    \item \textbf{Bottleneck}: duas camadas convolucionais com 128 filtros na
+    resolução mínima ($64 \times 64$), onde são capturadas as representações
+    mais abstratas;
+    \item \textbf{Decoder (expansão)}: 5 estágios de \textit{upsampling}
+    $2 \times 2$ com concatenação das ativações correspondentes do encoder
+    (\textit{skip connections}), seguidos de dupla convolução. Os mapas de
+    características diminuem: 128 $\to$ 64 $\to$ 48 $\to$ 32 $\to$ 16;
     \item \textbf{Camada de saída}: convolução $1 \times 1$ com ativação
     Sigmoide, produzindo um mapa de probabilidade pixel a pixel
     $p \in [0, 1]$.
 \end{itemize}
 
-A escolha das \textit{skip connections} é fundamental: elas preservam
-informações de alta resolução do encoder, compensando a perda de detalhe
-espacial pelo max-pooling — essencial para localizar com precisão os pixels de
-sinal em imagens de $2048 \times 2048$.
+As \textit{skip connections} são fundamentais para este problema: ao
+concatenar os mapas de alta resolução do encoder com os mapas reconstruídos do
+decoder, a rede preserva detalhes finos do sinal mesmo após o gargalo
+(\textit{bottleneck}). Sem essas conexões, a informação de posição dos
+pixels de sinal — que ocupam apenas ${\sim}0{,}1\%$ da imagem — seria
+perdida na compressão.
 
-Para cada pixel da imagem de entrada, a U-Net retorna a probabilidade desse
-pixel pertencer à classe de sinal. Um limiar $t$ é aplicado ao mapa de
-probabilidades para obter a máscara binária de seleção:
+A saída da U-Net é um mapa de probabilidades da mesma resolução da entrada
+($2048 \times 2048$). Um limiar $t$ é aplicado para obter a máscara binária:
 \begin{equation}
     M[x, y] = \begin{cases}
         1 & \text{se } p_{\text{U-Net}}[x, y] > t \\
@@ -1074,17 +980,20 @@ probabilidades para obter a máscara binária de seleção:
     \label{eq:binary_mask}
 \end{equation}
 
-A arquitetura completa da U-Net utilizada é apresentada no
-Apêndice~\ref{apend:unet}.
+A arquitetura completa é apresentada no Apêndice~\ref{apend:unet}.
 
 \section{Focal Loss: Tratando o Desbalanceamento Extremo de Classes}
 \label{sec:focal_loss}
 
-O extremo desbalanceamento de classes (${\sim}0{,}1\%$ de sinal vs.\
-${\sim}99{,}9\%$ de fundo) é o maior desafio do treinamento. A entropia
-cruzada binária padrão tende a ser dominada pela classe majoritária (fundo),
-dificultando o aprendizado dos padrões de pixels de sinal. Para contornar esse
-problema, foi adotada a \textbf{Focal Loss}~\cite{lin2017focal}:
+O extremo desbalanceamento de classes é o maior desafio do treinamento. Com
+apenas ${\sim}0{,}1\%$ de pixels de sinal, a entropia cruzada binária padrão
+é dominada pela classe majoritária (fundo) — a rede pode atingir
+$> 99{,}9\%$ de acurácia simplesmente classificando todos os pixels como
+fundo, sem aprender os padrões de sinal.
+
+A \textbf{Focal Loss}~\cite{lin2017focal}, proposta originalmente para
+detecção de objetos densos, generaliza a entropia cruzada binária adicionando
+dois mecanismos de controle:
 
 \begin{equation}
     FL(p_t) = -\alpha_t \cdot (1 - p_t)^{\gamma} \cdot \log(p_t)
@@ -1094,29 +1003,36 @@ problema, foi adotada a \textbf{Focal Loss}~\cite{lin2017focal}:
 onde:
 \begin{itemize}
     \item $p_t$ é a probabilidade prevista para a classe correta;
-    \item $\gamma \geq 0$ é o parâmetro de foco: reduz a contribuição de
-    exemplos fáceis (bem classificados), focando o treinamento em exemplos
-    difíceis. Valor utilizado: $\gamma = 2$;
-    \item $\alpha_t$ é o fator de balanceamento de classes. Para a classe de
-    sinal: $\alpha_t = \alpha = 4$; para o fundo: $\alpha_t = 1 - \alpha$.
+    \item $\gamma \geq 0$ é o \textbf{parâmetro de foco}: reduz a
+    contribuição de exemplos fáceis (bem classificados). Para $\gamma = 0$,
+    recupera-se a entropia cruzada padrão. Valores maiores concentram o
+    treinamento em exemplos difíceis. Valor utilizado: $\gamma = 2$;
+    \item $\alpha_t$ é o \textbf{fator de balanceamento de classes}. Para a
+    classe de sinal: $\alpha_t = \alpha$; para o fundo:
+    $\alpha_t = 1 - \alpha$.
 \end{itemize}
 
 O parâmetro $\alpha = 4$ foi selecionado para \textbf{priorizar a Revocação
-em detrimento da Precisão}: no contexto do experimento, perder um evento
-verdadeiro (FN) é mais custoso do que incluir alguns pixels de fundo
-adicionais (FP), pois os pixels de fundo extras enviados ao iDBSCAN geram
-clusters falsos que podem ser filtrados na análise, enquanto pixels de evento
-perdidos resultam em subestimação irreversível da energia.
+em detrimento da Precisão}. A justificativa é física: no contexto do
+experimento, perder um evento verdadeiro (falso negativo) é mais custoso do
+que incluir alguns pixels de fundo adicionais (falsos positivos). Os pixels
+de fundo extras geram clusters falsos que podem ser identificados e
+descartados na análise posterior. Contudo, pixels de evento perdidos resultam
+em subestimação irreversível da energia — particularmente grave na faixa de
+0,25 a 1~keV, onde cada pixel de sinal contém informação preciosa.
 
-Comparando com a entropia cruzada binária:
+Para efeito de comparação, a entropia cruzada binária padrão é:
 \begin{equation}
     \text{BCE}(p_t) = -\log(p_t)
     \label{eq:bce}
 \end{equation}
-a Focal Loss adiciona o fator $(1 - p_t)^\gamma$ que suprime a contribuição
-de pixels facilmente classificados (ruído de fundo com $p_t \approx 0$),
-forçando a rede a se concentrar nos pixels de sinal de baixa energia, que são
-os exemplos mais difíceis do conjunto de treinamento.
+
+A Focal Loss adiciona o fator $(1 - p_t)^\gamma$, que suprime a contribuição
+de pixels facilmente classificados (ruído de fundo com $p_t \approx 0$).
+Com $\gamma = 2$, um pixel classificado corretamente com $p_t = 0{,}9$ tem
+sua contribuição à perda reduzida por um fator de 100 em relação a $\gamma =
+0$. Isso força a rede a se concentrar nos pixels ambíguos — exatamente os
+pixels de sinal de baixa energia, que são os exemplos mais difíceis.
 
 \section{Configuração de Treinamento}
 \label{sec:training_config}
@@ -1127,17 +1043,57 @@ Os parâmetros de treinamento utilizados são:
     aprendizado $= 0{,}02$;
     \item \textbf{Épocas}: 50, com 450 passos por época;
     \item \textbf{Regularização}: \textit{Batch Normalization} em cada bloco
-    convolucional;
+    convolucional, para estabilizar o treinamento e permitir taxas de
+    aprendizado mais altas;
+    \item \textbf{Função de perda}: Focal Loss com $\alpha = 4$ e
+    $\gamma = 2$;
     \item \textbf{Critério de parada}: monitoramento da Focal Loss de
-    validação ao longo das épocas.
+    validação ao longo das épocas, sem indicação de \textit{overfitting}
+    após 50 épocas.
+\end{itemize}
+
+\section{Métricas de Avaliação}
+\label{sec:metrics}
+
+Dada a inadequação de métricas como acurácia e ROC para problemas de classes
+altamente desbalanceadas, o desempenho é avaliado por:
+
+\begin{equation}
+    \text{Precisão} = \frac{VP}{VP + FP}
+    \label{eq:precision}
+\end{equation}
+\begin{equation}
+    \text{Revocação} = \frac{VP}{VP + FN}
+    \label{eq:recall}
+\end{equation}
+
+onde $VP$ são os pixels de sinal corretamente classificados, $FP$ são pixels
+de fundo classificados como sinal e $FN$ são pixels de sinal classificados
+como fundo. A Precisão indica a pureza da seleção; a Revocação indica a
+completude da detecção.
+
+Além das métricas de pixel, a avaliação \textit{end-to-end} no pipeline de
+reconstrução utiliza:
+\begin{itemize}
+    \item \textbf{Taxa de detecção de eventos verdadeiros}: fração de imagens
+    em que o evento real é detectado pelo iDBSCAN;
+    \item \textbf{Número de clusters falsos}: clusters espúrios formados por
+    pixels de ruído — indica a taxa de alarme falso;
+    \item \textbf{Integral do cluster} ($S_c$): soma das intensidades dos
+    pixels do cluster, proporcional à energia depositada. A comparação com o
+    $S_c$ do \textit{ground truth} avalia a qualidade da estimativa de
+    energia;
+    \item \textbf{Tempo de processamento}: tempo total e por etapa,
+    comparando os dois pipelines nas mesmas condições computacionais.
 \end{itemize}
 
 \section{Integração ao Pipeline de Reconstrução}
 \label{sec:pipeline_integration}
 
 A U-Net treinada é inserida no pipeline de reconstrução em substituição às
-etapas de filtragem e redução de ruído. A comparação entre o pipeline original
-e o pipeline proposto é detalhada abaixo.
+etapas de filtragem, rebinning e redução de ruído. A comparação entre o
+pipeline original e o proposto é apresentada abaixo e ilustrada na
+Figura~\ref{fig:pipeline_comparison}.
 
 \medskip
 \noindent\textbf{Pipeline original (Reco):}
@@ -1146,7 +1102,7 @@ e o pipeline proposto é detalhada abaixo.
     \item Limiarização ($n \cdot \sigma$)
     \item Rebinning ($2048 \to 512$)
     \item Filtro de mediana ($4 \times 4$)
-    \item Redução de ruído (isolados)
+    \item Redução de ruído (pixels isolados)
     \item iDBSCAN $\to$ Extração de características
 \end{enumerate}
 
@@ -1158,16 +1114,36 @@ e o pipeline proposto é detalhada abaixo.
     \item iDBSCAN $\to$ Extração de características
 \end{enumerate}
 
-Os parâmetros do iDBSCAN utilizados nas avaliações são:
-\texttt{branch = winter23}, \texttt{nsigma = 0,2}, \texttt{eps = 18},
-\texttt{min\_samples = 20}, \texttt{dir\_radius = 35}, com 1 evento de NR
-ou ER por imagem a 0,25, 0,5 ou 1~keV.
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.75\textwidth]{image_files/fluxgram_algorithm.PNG}
+\caption{Comparação esquemática dos pipelines. No pipeline proposto (Reco +
+U-Net), a rede neural substitui as etapas de limiarização por $n\sigma$,
+rebinning, filtragem e redução de ruído. Os parâmetros do iDBSCAN são mantidos
+idênticos: \texttt{eps = 18}, \texttt{min\_samples = 20},
+\texttt{dir\_radius = 35}, \texttt{nsigma = 0,2} (\texttt{branch =
+winter23}).}
+\label{fig:pipeline_comparison}
+\end{figure}
 
-A principal vantagem do pipeline proposto é que a U-Net opera diretamente
-na imagem de alta resolução ($2048 \times 2048$), sem rebinning prévio, e
-entrega ao iDBSCAN apenas ${\sim}450$ pixels (vs.\ ${\sim}50{.}000$ no
-algoritmo original) — uma redução de dois ordens de magnitude no custo
-computacional do agrupamento.
+O pipeline proposto apresenta duas vantagens estruturais:
+\begin{enumerate}
+    \item \textbf{Opera na resolução completa}: a U-Net processa imagens de
+    $2048 \times 2048$ diretamente, sem a perda de resolução do rebinning
+    para $512 \times 512$ — preservando informação espacial crucial para
+    eventos de baixa energia cujos traços ocupam apenas poucos pixels;
+    \item \textbf{Redução radical de pixels}: a U-Net entrega ao iDBSCAN
+    apenas ${\sim}450$ pixels por imagem (somente os identificados como
+    sinal), comparado a ${\sim}50{.}000$ no algoritmo original — uma redução
+    de duas ordens de magnitude que impacta diretamente o tempo de
+    agrupamento, cuja complexidade é supralinear com o número de pontos
+    (cf.\ Figura~\ref{fig:dbscan_time}).
+\end{enumerate}
+
+Para a avaliação, cada imagem de teste contém exatamente 1 evento de NR ou ER
+com energia de 0,25, 0,5 ou 1~keV. Todos os parâmetros do iDBSCAN são
+mantidos idênticos nos dois pipelines para garantir que as diferenças
+observadas sejam atribuídas exclusivamente à etapa de seleção de pixels.
 
 
 %%==========================================================
@@ -1175,182 +1151,257 @@ computacional do agrupamento.
 \label{chap:results}
 %%==========================================================
 
-Os resultados são apresentados em quatro partes: (1) curvas de treinamento da
-U-Net; (2) análise de eventos falsos e taxa de detecção; (3) tempo de
-processamento; e (4) o resultado central — distribuições de integral de
-cluster para 1~keV, 0,5~keV e 0,25~keV, comparando o pipeline proposto com
-o algoritmo original e o \textit{ground truth}.
+Neste capítulo são apresentados os resultados obtidos com a integração da
+U-Net ao pipeline de reconstrução do Experimento CYGNO, organizados em cinco
+partes: (1) curvas de treinamento; (2) detecção de eventos e clusters falsos;
+(3) tempo de processamento; (4) o resultado central — distribuições de
+integral de cluster para cada energia; e (5) discussão dos resultados com
+análise por energia e tipo de partícula.
 
 \section{Treinamento da U-Net}
 \label{sec:training_results}
 
-A Figura~\ref{fig:training_curves} apresenta as curvas de Focal Loss, Precisão
-e Revocação ao longo das épocas de treino e validação.
+A Figura~\ref{fig:training_curves} apresenta a evolução da Focal Loss ao
+longo das 50 épocas de treinamento, para os conjuntos de treino e validação.
 
 \begin{figure}[H]
 \centering
 \includegraphics[width=\textwidth]{quali_images/loss_function_training_validation.png}
-\caption{Curvas de treinamento da U-Net: Focal Loss (esquerda), Precisão
-(centro) e Revocação (direita) para os conjuntos de treino e validação ao
-longo das épocas. A convergência rápida (menos de 5 épocas) e a ausência de
-\textit{overfitting} indicam que o modelo generaliza bem para a faixa de baixa
-energia. Fonte: apresentação à colaboração CYGNO (2024).}
+\caption{Evolução da Focal Loss durante o treinamento da U-Net. As curvas de
+treino e validação convergem rapidamente (menos de 5 épocas) e permanecem
+próximas ao longo de todas as 50 épocas, sem evidências de
+\textit{overfitting}. Fonte: apresentação à colaboração CYGNO (2024).}
 \label{fig:training_curves}
 \end{figure}
 
-A evolução das métricas ao longo do treinamento é detalhada nas
-Figuras~\ref{fig:precision_curves} e~\ref{fig:recall_curves}.
+As Figuras~\ref{fig:precision_curves} e~\ref{fig:recall_curves} detalham a
+evolução das métricas de Precisão e Revocação.
 
 \begin{figure}[H]
 \centering
 \includegraphics[width=0.72\textwidth]{quali_images/precision.png}
-\caption{Curvas de Precisão de treino e validação ao longo das épocas.
-O valor se estabiliza em aproximadamente 0,85--0,90 sem sinais de
-\textit{overfitting}. Fonte: apresentação à colaboração CYGNO (2024).}
+\caption{Precisão de treino e validação ao longo das épocas. O valor se
+estabiliza em ${\sim}0{,}85$--$0{,}90$. A Precisão mede a fração dos pixels
+selecionados pela U-Net que são efetivamente sinal — valores elevados indicam
+baixa taxa de falsos positivos. Fonte: apresentação à colaboração CYGNO
+(2024).}
 \label{fig:precision_curves}
 \end{figure}
 
 \begin{figure}[H]
 \centering
 \includegraphics[width=0.72\textwidth]{quali_images/recall.png}
-\caption{Curvas de Revocação de treino e validação ao longo das épocas.
-O valor supera 0,88, refletindo a priorização imposta pelo parâmetro
-$\alpha = 4$ da Focal Loss. Fonte: apresentação à colaboração CYGNO (2024).}
+\caption{Revocação de treino e validação ao longo das épocas. O valor supera
+$0{,}88$, refletindo a priorização imposta pelo $\alpha = 4$ da Focal Loss. A
+Revocação mede a fração dos pixels de sinal verdadeiros que foram corretamente
+identificados — valores elevados indicam poucos eventos perdidos. Fonte:
+apresentação à colaboração CYGNO (2024).}
 \label{fig:recall_curves}
 \end{figure}
 
-Os resultados de treinamento evidenciam três características importantes:
+Os resultados de treinamento evidenciam três características:
 \begin{itemize}
     \item \textbf{Convergência rápida}: a Focal Loss atinge valores estáveis
-    em menos de 5 épocas;
+    em menos de 5 épocas, indicando que a rede aprende rapidamente os padrões
+    de sinal mesmo para baixas energias;
     \item \textbf{Ausência de \textit{overfitting}}: as curvas de treino e
-    validação permanecem próximas ao longo de todas as 50 épocas;
-    \item \textbf{Relação Precisão-Revocação}: a Revocação ($> 0{,}88$)
-    supera a Precisão ($0{,}85$--$0{,}90$), refletindo o efeito do parâmetro
-    $\alpha = 4$ da Focal Loss, que penaliza mais fortemente os falsos
-    negativos.
+    validação permanecem próximas ao longo de todas as 50 épocas, confirmando
+    que a combinação de aumento de dados e \textit{batch normalization}
+    previne a sobre-parametrização;
+    \item \textbf{Revocação $>$ Precisão}: a Revocação ($> 0{,}88$) supera
+    sistematicamente a Precisão ($0{,}85$--$0{,}90$), validando o efeito
+    intencional do $\alpha = 4$ na Focal Loss. A rede prioriza a detecção
+    completa de pixels de sinal, aceitando uma fração controlada de falsos
+    positivos.
 \end{itemize}
+
+Esse comportamento é desejável: os falsos positivos geram clusters espúrios
+que podem ser filtrados pelo iDBSCAN ou na análise posterior, enquanto falsos
+negativos resultam em perda irreversível de informação de energia.
 
 \section{Taxa de Detecção e Eventos Falsos}
 \label{sec:fake_events}
 
-Cada imagem de teste contém exatamente um evento (NR ou ER) com energia de
-0,25, 0,5 ou 1~keV. A Figura~\ref{fig:fake_events} compara o número de
+Cada imagem de teste contém exatamente um evento (NR ou ER) em uma das três
+energias avaliadas. A Figura~\ref{fig:fake_events} compara o número de
 clusters falsos detectados pelo algoritmo original (Reco) e pelo pipeline
-proposto (Reco + U-Net).
+proposto (Reco + U-Net), discriminando por energia e tipo de partícula.
 
 \begin{figure}[H]
 \centering
 \includegraphics[width=\textwidth]{quali_images/fake_events.png}
-\caption{Comparação do número de clusters falsos por evento entre o algoritmo
-original (Reco) e o pipeline proposto (Reco + U-Net), para eventos de NR e ER
-a 0,25, 0,5 e 1~keV. \textbf{99\% dos eventos verdadeiros foram detectados}
-pelo pipeline com U-Net. A mediana de clusters falsos cai de ${\sim}30$
-(algoritmo original) para ${\sim}3$--$4$ (Reco + U-Net), uma redução de
-aproximadamente uma ordem de magnitude. Fonte: apresentação à colaboração
-CYGNO (2024).}
+\caption{Número de clusters falsos por evento: algoritmo original (Reco) vs.\
+pipeline proposto (Reco + U-Net), para NR e ER a 0,25, 0,5 e 1~keV.
+\textbf{99\% dos eventos verdadeiros foram detectados} pelo pipeline com
+U-Net. A mediana de clusters falsos cai de ${\sim}30$ para ${\sim}3$--$4$,
+uma redução de aproximadamente uma ordem de magnitude. Fonte: apresentação à
+colaboração CYGNO (2024).}
 \label{fig:fake_events}
 \end{figure}
 
-Os resultados demonstram:
+A análise detalhada revela:
 \begin{itemize}
-    \item \textbf{99\% de taxa de detecção de eventos verdadeiros} para toda
-    a faixa de 0,25 a 1~keV;
-    \item Redução da mediana de clusters falsos de ${\sim}30$ para
-    ${\sim}3$--$4$ — queda de aproximadamente uma ordem de magnitude;
-    \item O controle de eventos falsos é crítico para experimentos de física
-    de partículas, onde o armazenamento e a análise de eventos espúrios
-    consomem recursos computacionais significativos e podem mascarar sinais
-    físicos.
+    \item \textbf{Taxa de detecção de 99\%}: a U-Net identifica corretamente
+    a esmagadora maioria dos eventos verdadeiros em todas as energias e ambos
+    os tipos de partícula. Os ${\sim}1\%$ de eventos não detectados
+    correspondem a traços de energia extremamente baixa (0,25~keV) com poucos
+    pixels ativados;
+    \item \textbf{Redução de clusters falsos}: a mediana cai de ${\sim}30$
+    (Reco) para ${\sim}3$--$4$ (Reco + U-Net). Essa redução é consequência
+    direta da seletividade da U-Net: ao enviar apenas ${\sim}450$ pixels ao
+    iDBSCAN (vs.\ ${\sim}50{.}000$), a probabilidade de formação de clusters
+    espúrios a partir de pixels de ruído é drasticamente reduzida;
+    \item \textbf{Consistência entre tipos de partícula}: o desempenho é
+    similar para NR e ER, indicando que a U-Net aprendeu padrões genéricos de
+    sinal vs.\ ruído, independentemente da morfologia do traço;
+    \item \textbf{Impacto prático}: em um experimento de longa duração
+    adquirindo milhões de imagens, reduzir os clusters falsos de ${\sim}30$
+    para ${\sim}3$--$4$ por imagem diminui significativamente o volume de
+    dados armazenados e o tempo de análise \textit{offline}.
 \end{itemize}
 
 \section{Tempo de Processamento}
 \label{sec:processing_time}
 
 A Figura~\ref{fig:processing_time} compara o tempo médio de processamento por
-imagem entre o algoritmo original e o pipeline proposto, detalhando a
-contribuição de cada etapa.
+imagem entre os dois pipelines, detalhando a contribuição de cada etapa
+(pré-processamento vs.\ agrupamento iDBSCAN).
 
 \begin{figure}[H]
 \centering
 \includegraphics[width=\textwidth]{quali_images/processing_time.png}
-\caption{Tempo de processamento por etapa do pipeline original (Reco) e do
-pipeline proposto (Reco + U-Net). A região indicada corresponde à etapa de
-pré-processamento; as demais barras indicam o tempo de agrupamento iDBSCAN.
-Mesmo operando em imagens de $2048 \times 2048$ pixels, a U-Net em GPU envia
-apenas ${\sim}450$ pixels ao iDBSCAN (vs.\ ${\sim}50{.}000$ no algoritmo
-original), resultando em tempo total inferior. Fonte: apresentação à
-colaboração CYGNO (2024).}
+\caption{Tempo de processamento por etapa: Reco (esquerda) vs.\ Reco + U-Net
+(direita). A região cinza indica o pré-processamento; as demais barras indicam
+o agrupamento iDBSCAN. Apesar de operar em imagens de resolução completa
+($2048 \times 2048$), o pipeline com U-Net apresenta tempo total
+significativamente menor. Fonte: apresentação à colaboração CYGNO (2024).}
 \label{fig:processing_time}
 \end{figure}
 
-A redução de tempo é explicada pela combinação de dois fatores:
+A redução de tempo é explicada por três fatores:
 \begin{enumerate}
-    \item \textbf{Eliminação do algoritmo redutor de ruído}: o passo mais
-    custoso do algoritmo original é suprimido;
-    \item \textbf{Redução radical de pixels para o iDBSCAN}: o pipeline com
-    U-Net envia ${\sim}450$ pixels ao iDBSCAN por imagem, comparado a
-    ${\sim}50{.}000$ no algoritmo original — redução de dois ordens de
-    magnitude que impacta diretamente o tempo de agrupamento, cuja
-    complexidade computacional é supralinear com o número de pontos
-    (cf.\ Figura~\ref{fig:dbscan_time}).
+    \item \textbf{Eliminação do algoritmo redutor de ruído}: no pipeline
+    original, esta é a etapa mais custosa — remove pixels isolados após a
+    filtragem, iterando sobre os ${\sim}50{.}000$ pixels sobreviventes. No
+    pipeline proposto, a U-Net já seleciona apenas os pixels relevantes,
+    tornando essa etapa desnecessária;
+    \item \textbf{Redução de pixels para o iDBSCAN}: o pipeline com U-Net
+    envia apenas ${\sim}450$ pixels ao iDBSCAN por imagem, comparado a
+    ${\sim}50{.}000$ no algoritmo original. Como a complexidade do iDBSCAN é
+    supralinear com o número de pontos (cf.\ Figura~\ref{fig:dbscan_time}),
+    essa redução de duas ordens de magnitude tem impacto direto no tempo de
+    agrupamento;
+    \item \textbf{Inferência GPU}: a U-Net processa cada imagem de
+    $2048 \times 2048$ pixels em tempo da ordem de centenas de milissegundos
+    em uma GPU, tempo significativamente menor que o conjunto de etapas que
+    substitui.
 \end{enumerate}
+
+Para o experimento em escala completa (Fase~1), onde milhares de imagens são
+adquiridas por hora, a redução de tempo de processamento por imagem é um
+requisito operacional fundamental.
 
 \section{Distribuições de Integral de Cluster: Resultado Central}
 \label{sec:cluster_integral}
 
-O resultado central deste trabalho são as distribuições de integral de
-cluster ($S_c$), proporcional à energia reconstruída, para as três energias
-avaliadas: 1~keV, 0,5~keV e 0,25~keV. Em cada figura, comparam-se as
-distribuições do pipeline proposto (Reco + U-Net), do algoritmo original
-(Reco) e do \textit{ground truth} (referência ideal).
+O resultado central são as distribuições de integral de cluster ($S_c$),
+proporcional à energia depositada pela partícula, comparando o pipeline
+proposto (Reco + U-Net) com o algoritmo original (Reco) e o
+\textit{ground truth} (referência ideal obtida diretamente da simulação). As
+distribuições são apresentadas separadamente para cada energia avaliada.
+
+\subsection{Eventos de 1~keV}
+
+A Figura~\ref{fig:result_1kev} mostra as distribuições para eventos de 1~keV,
+a maior energia avaliada neste trabalho. Para esta energia, o sinal dos
+pixels de evento já apresenta alguma distinção do ruído.
 
 \begin{figure}[H]
 \centering
 \includegraphics[width=\textwidth]{quali_images/1kev_result.png}
-\caption{Distribuições de integral de cluster ($S_c$) para eventos de
-\textbf{1~keV}: pipeline com U-Net (Reco + U-Net, linha superior) vs.\
-algoritmo original (Reco, linha inferior) vs.\ \textit{ground truth} (linha
-tracejada). O pipeline com U-Net reproduz fielmente a distribuição de
-referência, enquanto o algoritmo original apresenta distribuições desviadas
-com caudas longas. Fonte: apresentação à colaboração CYGNO (2024).}
+\caption{Distribuições de $S_c$ para eventos de \textbf{1~keV}. Linha
+superior: Reco + U-Net (azul) vs.\ \textit{ground truth} (tracejado). Linha
+inferior: Reco original (vermelho) vs.\ \textit{ground truth} (tracejado).
+O pipeline com U-Net reproduz fielmente a distribuição de referência para ER
+e NR. O algoritmo original apresenta desvio sistemático e caudas longas.
+Fonte: apresentação à colaboração CYGNO (2024).}
 \label{fig:result_1kev}
 \end{figure}
+
+Para 1~keV, o pipeline Reco + U-Net produz distribuições de $S_c$ que se
+sobrepõem quase perfeitamente ao \textit{ground truth} para ambos os tipos
+de recuo (ER e NR). O algoritmo original, em contraste, apresenta distribuições
+sistematicamente deslocadas — com picos deslocados e caudas para valores altos
+de $S_c$, indicando que pixels de ruído são incorretamente incluídos nos
+clusters, inflando a estimativa de energia.
+
+\subsection{Eventos de 0,5~keV}
+
+A Figura~\ref{fig:result_05kev} apresenta os resultados para 0,5~keV, energia
+em que a razão sinal-ruído é substancialmente menor.
 
 \begin{figure}[H]
 \centering
 \includegraphics[width=\textwidth]{quali_images/05kev_result.png}
-\caption{Distribuições de integral de cluster para eventos de
-\textbf{0,5~keV}. Com a redução na razão sinal-ruído em relação a 1~keV,
-o pipeline com U-Net mantém as distribuições próximas ao
-\textit{ground truth}, enquanto o algoritmo original apresenta degradação
-acentuada. Fonte: apresentação à colaboração CYGNO (2024).}
+\caption{Distribuições de $S_c$ para eventos de \textbf{0,5~keV}. A degradação
+do algoritmo original é mais acentuada que em 1~keV. O pipeline com U-Net
+mantém as distribuições próximas ao \textit{ground truth}, demonstrando
+robustez na redução da razão sinal-ruído. Fonte: apresentação à colaboração
+CYGNO (2024).}
 \label{fig:result_05kev}
 \end{figure}
+
+Com a redução de energia de 1 para 0,5~keV, observa-se que:
+\begin{itemize}
+    \item O \textbf{pipeline Reco + U-Net} mantém a concordância com o
+    \textit{ground truth}, embora com um leve alargamento das distribuições
+    — esperado, dado que o sinal é mais tênue;
+    \item O \textbf{algoritmo original} apresenta degradação acentuada: as
+    distribuições deslocam-se ainda mais, com sobreposição significativa
+    entre os valores de $S_c$ de sinal e de ruído.
+\end{itemize}
+
+\subsection{Eventos de 0,25~keV}
+
+A Figura~\ref{fig:result_025kev} mostra os resultados para 0,25~keV — a
+energia mais baixa avaliada e o cenário mais desafiador, onde o sinal dos
+pixels é praticamente indistinguível do ruído eletrônico.
 
 \begin{figure}[H]
 \centering
 \includegraphics[width=\textwidth]{quali_images/025kev_result.png}
-\caption{Distribuições de integral de cluster para eventos de
-\textbf{0,25~keV} — a energia mais baixa avaliada, onde o sinal mal se
-distingue do ruído eletrônico. O pipeline com U-Net ainda preserva as
-distribuições próximas ao \textit{ground truth}, demonstrando robustez na
-faixa de energia de máximo interesse físico para WIMPs leves. O algoritmo
-original apresenta distribuições completamente desviadas para essa energia.
-Fonte: apresentação à colaboração CYGNO (2024).}
+\caption{Distribuições de $S_c$ para eventos de \textbf{0,25~keV} — a energia
+mais baixa avaliada. Mesmo neste regime extremo, o pipeline com U-Net
+preserva distribuições próximas ao \textit{ground truth}. O algoritmo original
+apresenta distribuições completamente desviadas, demonstrando incapacidade de
+reconstruir a energia nesta faixa. Fonte: apresentação à colaboração CYGNO
+(2024).}
 \label{fig:result_025kev}
 \end{figure}
 
-A análise conjunta das três figuras revela o resultado central deste trabalho:
-a \textbf{U-Net mantém a estimativa de energia próxima ao \textit{ground truth}
-para toda a faixa de 0,25 a 1~keV}, incluindo a energia de 0,25~keV onde o
-sinal é praticamente indistinguível do ruído eletrônico para métodos clássicos.
-O algoritmo original, em contrapartida, apresenta distribuições amplamente
-desviadas e caudas longas para todas as energias avaliadas, tornando-o
-inadequado para a análise de eventos de baixa energia.
+Este é o resultado mais significativo deste trabalho: para eventos de
+0,25~keV — exatamente a faixa de máximo interesse para WIMPs leves — a U-Net
+ainda preserva uma estimativa de energia razoável. O algoritmo original, por
+outro lado, apresenta distribuições completamente desviadas, sem nenhuma
+correspondência com o \textit{ground truth}. Isso confirma que a limiarização
+por $n \cdot \sigma$ é fundamentalmente inadequada para esta faixa de energia,
+enquanto a U-Net, treinada com a Focal Loss, consegue identificar os pixels
+de sinal mesmo quando suas intensidades são comparáveis ao ruído.
+
+\subsection{Análise Consolidada}
+
+A análise conjunta das três energias revela uma tendência clara: à medida que
+a energia diminui de 1 para 0,25~keV, o desempenho do algoritmo original
+degrada-se progressivamente, enquanto a U-Net mantém sua capacidade de estimar
+a energia com precisão. Esse comportamento é consequência direta da
+abordagem: enquanto a limiarização por $n \cdot \sigma$ aplica um critério
+\textit{fixo} e \textit{local} a cada pixel, a U-Net aprende representações
+\textit{contextuais} que levam em conta a vizinhança do pixel — reconhecendo
+padrões espaciais de deposição de energia que se distinguem dos padrões
+aleatórios do ruído, mesmo quando as intensidades individuais são comparáveis.
 
 A Tabela~\ref{tab:summary_results} sumariza os principais resultados
-quantitativos.
+quantitativos para toda a faixa de energia avaliada.
 
 \begin{table}[H]
 \centering
@@ -1361,15 +1412,39 @@ algoritmo original (Reco), para eventos na faixa de 0,25 a 1~keV.}
 \toprule
 \textbf{Métrica} & \textbf{Reco + U-Net} & \textbf{Reco (original)} \\
 \midrule
-Taxa de detecção de eventos verdadeiros     & ${\sim}99\%$                      & Limitada            \\
-Pixels ao iDBSCAN (por imagem)              & ${\sim}450$                       & ${\sim}50{.}000$    \\
-Clusters falsos por evento (mediana)        & ${\sim}3$--$4$                    & ${\sim}30$          \\
-Integral de cluster ($S_c$, 0,25--1~keV)   & $\approx$ \textit{ground truth}   & Alta imprecisão     \\
-Tempo de processamento                      & Reduzido (GPU)                    & ${\sim}10\times$ maior \\
+Taxa de detecção verdadeira     & ${\sim}99\%$                      & Limitada            \\
+Pixels ao iDBSCAN (por imagem)  & ${\sim}450$                       & ${\sim}50{.}000$    \\
+Clusters falsos (mediana)       & ${\sim}3$--$4$                    & ${\sim}30$          \\
+$S_c$ em 1~keV                  & $\approx$ \textit{ground truth}   & Desvio moderado     \\
+$S_c$ em 0,5~keV                & $\approx$ \textit{ground truth}   & Desvio acentuado    \\
+$S_c$ em 0,25~keV               & $\approx$ \textit{ground truth}   & Sem correspondência \\
+Tempo de processamento          & Reduzido (GPU)                    & ${\sim}10\times$ maior \\
 \bottomrule
 \end{tabular}
 \fonte{Elaborado pelo autor. Dados da apresentação à colaboração CYGNO (2024).}
 \end{table}
+
+\section{Significado Físico dos Resultados}
+\label{sec:discussion}
+
+Os resultados apresentados neste capítulo têm implicações diretas para a
+sensibilidade do Experimento CYGNO à detecção de matéria escura leve:
+
+\begin{enumerate}
+    \item \textbf{Extensão do limiar de energia}: a capacidade de reconstruir
+    a energia de eventos de 0,25~keV com precisão abre uma janela de
+    detecção que era inacessível ao algoritmo original. Para WIMPs com massa
+    de ${\sim}1$~GeV/c$^2$, os recuos nucleares depositam energias
+    tipicamente abaixo de 1~keV — exatamente a faixa em que a U-Net
+    demonstrou desempenho superior;
+    \item \textbf{Redução de fundo}: a diminuição de clusters falsos de
+    ${\sim}30$ para ${\sim}3$--$4$ por imagem implica uma redução de
+    fundo que melhora diretamente a razão sinal/fundo do experimento;
+    \item \textbf{Viabilidade operacional}: a redução do tempo de
+    processamento por imagem torna viável o processamento em tempo quasi-real
+    de grandes volumes de dados, requisito essencial para a operação
+    contínua do detector nas fases futuras do experimento.
+\end{enumerate}
 
 
 %%==========================================================
