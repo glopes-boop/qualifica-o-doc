@@ -203,6 +203,7 @@
       \captionsetup{
                     labelseparator=dash,
                     }
+      \providecommand{\configurecaptions}{}%
       \renewcommand{\configurecaptions}{
                   \captionsetup{
                                 singlelinecheck=false}}

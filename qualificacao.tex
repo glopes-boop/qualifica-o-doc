@@ -25,7 +25,7 @@
 
 %% -----------------------------------------------------------------------------
 
-\titulo{Aprendizado de Máquina para Seleção de Pixels em Baixas Energias no Experimento CYGNO}
+\titulo{Aprendizado de Máquina para Seleção de Pixels em Baixas Energias no Experimento~CYGNO}
 \subtitulo{Proposta de Qualificação de Doutorado}
 \autor{Guilherme Sebastião Pinheiro Lopes}
 \autorVirg{Lopes, Guilherme Sebastião Pinheiro}
@@ -1357,15 +1357,15 @@ quantitativos.
 \caption{Resumo dos resultados do pipeline Reco + U-Net em comparação com o
 algoritmo original (Reco), para eventos na faixa de 0,25 a 1~keV.}
 \label{tab:summary_results}
-\begin{tabular}{lcc}
+\begin{tabular}{p{6cm}cc}
 \toprule
 \textbf{Métrica} & \textbf{Reco + U-Net} & \textbf{Reco (original)} \\
 \midrule
-Taxa de detecção de eventos verdadeiros     & ${\sim}99\%$                      & Limitada em baixas energias  \\
-Pixels enviados ao iDBSCAN (por imagem)     & ${\sim}450$                       & ${\sim}50{.}000$             \\
-Clusters falsos por evento (mediana)        & ${\sim}3$--$4$                    & ${\sim}30$                   \\
-Integral de cluster ($S_c$, 0,25--1~keV)   & Próxima ao \textit{ground truth}  & Alta imprecisão              \\
-Tempo de processamento                      & Reduzido (GPU)                    & ${\sim}10\times$ maior       \\
+Taxa de detecção de eventos verdadeiros     & ${\sim}99\%$                      & Limitada            \\
+Pixels ao iDBSCAN (por imagem)              & ${\sim}450$                       & ${\sim}50{.}000$    \\
+Clusters falsos por evento (mediana)        & ${\sim}3$--$4$                    & ${\sim}30$          \\
+Integral de cluster ($S_c$, 0,25--1~keV)   & $\approx$ \textit{ground truth}   & Alta imprecisão     \\
+Tempo de processamento                      & Reduzido (GPU)                    & ${\sim}10\times$ maior \\
 \bottomrule
 \end{tabular}
 \fonte{Elaborado pelo autor. Dados da apresentação à colaboração CYGNO (2024).}

@@ -1,0 +1,24 @@
+pdfs/Collaboration Meeting 12_2024.pdf
+pdfs/dissertacao_cygno_unet.pdf
+pdfs/xGuilherme Sebastião Pinheiro Lopes_Impact_of_filtering_on_CYGNO_s_Experiment_versao_final.pdf
+
+# LaTeX build artifacts
+*.aux
+*.bbl
+*.blg
+*.log
+*.out
+*.toc
+*.lof
+*.lot
+*.fls
+*.fdb_latexmk
+*.synctex.gz
+*.synctex(busy)
+*.ilg
+*.idx
+*.ind
+*.ist
+qualificacao.pdf
+modelo.pdf
+exemplo_modelo.pdf
