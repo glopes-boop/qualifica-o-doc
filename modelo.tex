@@ -262,13 +262,246 @@ The proposal is to develop a simulation environment where we can evaluate any fi
 
 
 
-\chapter{Literature Review}
-\label{chap:litrev}
+% \chapter{Literature Review}
+% \label{chap:litrev}
 
 
-\section{Convolutional Neural Networks (CNN)}
+% \section{Convolutional Neural Networks (CNN)}
 
-\section{CNN for signal-background classification in Particle Physics}
+% \section{CNN for signal-background classification in Particle Physics}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\chapter{Revisão Bibliográfica}
+
+\section{Formulação matemática do problema de denoising}
+
+O problema de restauração de imagens consiste em recuperar uma imagem ideal $x$ a partir de uma observação degradada $y$. Em sistemas reais de aquisição, o processo de formação da imagem pode ser descrito de forma geral por
+\begin{equation}
+y = Hx + n,
+\end{equation}
+onde $H$ representa o operador do sistema de aquisição e $n$ corresponde ao ruído introduzido durante o processo de medição \cite{bertero1998inverse}. No caso particular de denoising, assume-se frequentemente $H = I$, resultando em
+\begin{equation}
+y = x + n.
+\end{equation}
+
+O objetivo consiste então em estimar a imagem verdadeira $x$ a partir da observação $y$. Esse problema é geralmente mal-posto, pois pequenas perturbações na observação podem produzir grandes variações na solução \cite{hadamard1902problemes}. Para lidar com essa dificuldade, métodos de restauração são tipicamente formulados como problemas de otimização regularizados,
+\begin{equation}
+\hat{x}
+=
+\arg\min_x
+\left(
+\|y-x\|_2^2 + \lambda R(x)
+\right),
+\end{equation}
+onde $R(x)$ representa um termo de regularização que incorpora conhecimento \textit{a priori} sobre a estrutura da imagem, e $\lambda$ controla o compromisso entre fidelidade aos dados e regularização.
+
+Uma interpretação alternativa pode ser obtida por meio de uma formulação Bayesiana \cite{jaynes2003probability}. Nesse contexto, busca-se a estimativa \textit{Maximum a Posteriori} (MAP),
+\begin{equation}
+\hat{x} = \arg\max_x P(x|y).
+\end{equation}
+Aplicando o teorema de Bayes,
+\begin{equation}
+P(x|y) \propto P(y|x)P(x),
+\end{equation}
+e assumindo ruído gaussiano aditivo,
+\begin{equation}
+P(y|x) \propto
+\exp\left(-\frac{1}{2\sigma^2}\|y-x\|_2^2\right),
+\end{equation}
+obtém-se novamente a formulação variacional
+\begin{equation}
+\hat{x}
+=
+\arg\min_x
+\left(
+\|y-x\|_2^2 + \lambda R(x)
+\right),
+\end{equation}
+na qual o termo de regularização pode ser interpretado como o negativo do logaritmo do prior,
+\begin{equation}
+R(x) = -\log P(x).
+\end{equation}
+
+Em aplicações científicas, o problema torna-se particularmente desafiador devido à baixa relação sinal-ruído (SNR) e à esparsidade espacial do sinal. Em muitas situações experimentais, apenas uma pequena fração dos pixels contém informação útil, enquanto a maior parte da imagem corresponde a fundo ruidoso. Esse cenário é especialmente relevante em imagens contendo estruturas finas, como traços de partículas, filamentos ou bordas de baixa intensidade.
+
+\section{Métodos clássicos de denoising}
+
+Diversas abordagens clássicas foram desenvolvidas para resolver o problema de denoising. Um dos primeiros avanços importantes foi o método de \textit{wavelet shrinkage} proposto por Donoho \cite{donoho1995denoising}. Nesse método, a imagem é representada em uma base wavelet e os coeficientes de pequena magnitude são eliminados por limiarização,
+\begin{equation}
+\hat{w}_i =
+\begin{cases}
+w_i - \tau, & |w_i| > \tau,\\
+0, & |w_i| \le \tau,
+\end{cases}
+\end{equation}
+onde $\tau$ é um limiar associado ao nível de ruído.
+
+Outro método amplamente utilizado é o \textit{Non-Local Means} (NLM), introduzido por Buades et al. \cite{buades2005nonlocal}. Nesse algoritmo, o valor estimado de um pixel é obtido como média ponderada de pixels pertencentes a regiões semelhantes da imagem,
+\begin{equation}
+\hat{x}(i)
+=
+\frac{1}{Z_i}
+\sum_j
+\exp
+\left(
+-\frac{\|P_i-P_j\|^2}{h^2}
+\right)
+y(j),
+\end{equation}
+onde $P_i$ representa o \textit{patch} centrado no pixel $i$, $h$ controla a intensidade da filtragem e $Z_i$ é um fator de normalização.
+
+Um avanço significativo foi obtido com o método BM3D proposto por Dabov et al. \cite{dabov2007bm3d}, que combina busca de regiões semelhantes com filtragem em domínios transformados tridimensionais. Esse método permaneceu por muitos anos como uma das principais referências em denoising clássico.
+
+No contexto variacional, um modelo amplamente utilizado é o de \textit{Total Variation} (TV), proposto por Rudin, Osher e Fatemi \cite{rudin1992tv},
+\begin{equation}
+E(x)
+=
+\|x-y\|_2^2 + \lambda \|\nabla x\|_1.
+\end{equation}
+Esse modelo promove suavização em regiões homogêneas enquanto preserva descontinuidades importantes da imagem, como bordas e transições abruptas.
+
+Muitos desses métodos podem ser interpretados como processos de difusão não linear. Um exemplo clássico é a equação de difusão anisotrópica proposta por Perona e Malik \cite{perona1990scale},
+\begin{equation}
+\frac{\partial x}{\partial t}
+=
+\nabla \cdot
+\left(
+c(|\nabla x|)\nabla x
+\right),
+\end{equation}
+na qual a função $c(\cdot)$ modula a intensidade da difusão de acordo com a magnitude do gradiente, permitindo suavizar regiões homogêneas sem degradar excessivamente as bordas.
+
+Apesar de sua eficácia em imagens naturais, esses métodos apresentam limitações quando aplicados a imagens científicas extremamente ruidosas ou contendo estruturas muito finas, pois o processo de suavização pode remover componentes de baixa intensidade que ainda carregam informação física relevante.
+
+\section{Representações esparsas}
+
+Uma abordagem alternativa para o problema de denoising baseia-se no conceito de representação esparsa. Nesse contexto, assume-se que a imagem pode ser representada como combinação linear de poucos elementos de um dicionário,
+\begin{equation}
+x = D\alpha,
+\end{equation}
+onde $D$ representa uma base ou dicionário e $\alpha$ é um vetor esparso de coeficientes.
+
+O problema de denoising pode então ser formulado como
+\begin{equation}
+\hat{\alpha}
+=
+\arg\min_\alpha
+\left(
+\|y-D\alpha\|_2^2 + \lambda \|\alpha\|_1
+\right).
+\end{equation}
+Essa formulação favorece soluções nas quais apenas um pequeno número de coeficientes é diferente de zero. A reconstrução final da imagem é então dada por $\hat{x}=D\hat{\alpha}$.
+
+Essa abordagem foi explorada por Elad e Aharon \cite{elad2006ksvd} no contexto de \textit{dictionary learning}, utilizando o algoritmo K-SVD para aprender o dicionário diretamente a partir dos dados. Representações esparsas são particularmente adequadas para sinais contendo estruturas geométricas simples, como bordas, linhas ou filamentos \cite{starck2010sparse}. Em imagens científicas nas quais o sinal aparece como trajetórias finas sobre fundo ruidoso, essa hipótese de esparsidade torna-se especialmente natural.
+
+Do ponto de vista matemático, esse tipo de formulação estabelece uma ponte entre o problema de denoising e problemas inversos esparsos, nos quais a solução procurada apresenta suporte espacial reduzido ou representação compacta em uma base apropriada.
+
+\section{Deep learning para restauração de imagens}
+
+Nos últimos anos, redes neurais profundas passaram a desempenhar papel central em problemas de restauração de imagens \cite{goodfellow2016deep}. Nesse contexto, a imagem restaurada é obtida por meio de uma função paramétrica
+\begin{equation}
+\hat{x} = f_\theta(y),
+\end{equation}
+onde $f_\theta$ representa uma rede neural convolucional parametrizada por $\theta$.
+
+Os parâmetros da rede são ajustados minimizando uma função de perda definida sobre um conjunto de treinamento,
+\begin{equation}
+\mathcal{L}(\theta)
+=
+\sum_i
+\|f_\theta(y_i)-x_i\|_2^2,
+\end{equation}
+onde $(y_i,x_i)$ representa um par formado por imagem ruidosa e sua respectiva referência.
+
+Uma abordagem particularmente eficaz consiste em treinar a rede para estimar diretamente o ruído presente na imagem, resultando em
+\begin{equation}
+\hat{x} = y - f_\theta(y).
+\end{equation}
+Esse princípio é utilizado em métodos como o DnCNN \cite{zhang2017dncnn}, que demonstraram desempenho superior a diversas técnicas clássicas.
+
+Além disso, trabalhos recentes mostraram que redes convolucionais podem ser interpretadas como versões aprendidas de processos iterativos de difusão \cite{chen2017reaction}. Em uma formulação simplificada, a atualização entre duas camadas pode ser escrita como
+\begin{equation}
+x_{k+1}
+=
+x_k +
+\sum_i
+K_i^T
+\phi_i(K_i x_k),
+\end{equation}
+onde $K_i$ são filtros convolucionais e $\phi_i$ são funções não lineares aprendidas. Essa interpretação conecta arquiteturas profundas com modelos variacionais clássicos e equações de difusão não linear.
+
+A principal vantagem desses métodos em relação às abordagens tradicionais está na capacidade de aprender, diretamente a partir dos dados, regularidades estatísticas e geométricas específicas do domínio de aplicação. Em vez de impor explicitamente uma regularização fixa, a rede aprende um regularizador implícito ajustado ao tipo de imagem considerado.
+
+\section{Arquiteturas multi-escala e aplicação a imagens esparsas}
+
+Entre as arquiteturas utilizadas em restauração de imagens, destaca-se a U-Net proposta por Ronneberger et al. \cite{ronneberger2015unet}. Essa arquitetura é composta por um \textit{encoder}, responsável por extrair representações progressivamente mais abstratas da imagem, e um \textit{decoder}, responsável por reconstruir a imagem final.
+
+Cada camada convolucional pode ser representada por
+\begin{equation}
+F_{l+1}
+=
+\sigma(W_l * F_l + b_l),
+\end{equation}
+onde $W_l$ representa o kernel de convolução, $b_l$ é o viés da camada e $\sigma$ é uma função de ativação não linear.
+
+Uma característica fundamental da U-Net é a presença de \textit{skip connections},
+\begin{equation}
+F_l^{dec}
+=
+\mathrm{concat}(F_l^{enc},F_l^{up}),
+\end{equation}
+que conectam diretamente mapas de características do encoder aos níveis correspondentes do decoder. Essas conexões permitem preservar detalhes espaciais de alta resolução durante o processo de reconstrução.
+
+Arquiteturas multi-escala são particularmente adequadas para imagens contendo estruturas em diferentes resoluções espaciais. Em muitas aplicações científicas, o sinal útil aparece como estruturas lineares ou filamentares muito localizadas, imersas em fundo ruidoso. Nesse cenário, torna-se essencial combinar informação local de alta resolução com contexto global, de modo a distinguir estruturas reais de flutuações estatísticas.
+
+Em detectores de partículas com leitura óptica, como aqueles utilizados no experimento CYGNO, o sinal útil aparece como trajetórias finas que ocupam apenas uma pequena fração da imagem. Esse cenário pode ser interpretado como um caso particular de problema inverso esparso, no qual a imagem verdadeira contém um conjunto reduzido de estruturas relevantes sobre um fundo amplamente dominado por ruído. A aplicação de arquiteturas do tipo U-Net torna-se, portanto, particularmente promissora, pois sua estrutura multi-escala e suas conexões de atalho favorecem a preservação de traços finos ao mesmo tempo em que reduzem componentes espúrios do fundo.
+
+\section{Lacunas na literatura e motivação do trabalho}
+
+A evolução das técnicas de denoising mostra um progresso consistente desde abordagens baseadas em transformadas e regularização variacional até métodos baseados em aprendizado profundo. Técnicas clássicas, como \textit{wavelet shrinkage}, NLM, BM3D e Total Variation, oferecem soluções matematicamente bem fundamentadas para a redução de ruído, enquanto modelos baseados em representações esparsas e redes neurais profundas ampliaram significativamente a capacidade de adaptação a diferentes tipos de imagem.
+
+Apesar desses avanços, grande parte da literatura concentra-se em imagens naturais, biomédicas ou em cenários nos quais o sinal útil ocupa uma fração substancial da imagem. Em contraste, diversas aplicações científicas produzem imagens com propriedades bastante distintas, caracterizadas por: (i) baixa relação sinal-ruído; (ii) ocupação espacial extremamente reduzida; e (iii) presença de estruturas finas, muitas vezes lineares ou filamentares, de baixa intensidade.
+
+Esse cenário é particularmente relevante em detectores de partículas com leitura óptica, nos quais os eventos físicos de interesse aparecem como traços esparsos em imagens de alta resolução. Nesses casos, métodos de denoising excessivamente suaves podem degradar ou até eliminar a estrutura do traço, comprometendo etapas posteriores de reconstrução, identificação e classificação de eventos. Por outro lado, métodos insuficientemente seletivos podem preservar grande parte do ruído de fundo, limitando o ganho efetivo em SNR.
+
+Embora arquiteturas profundas tenham demonstrado excelente desempenho em tarefas gerais de restauração de imagens, ainda há relativamente poucos estudos focados em imagens esparsas contendo trajetórias de partículas adquiridas em detectores ópticos. Em particular, permanece aberta a investigação de como arquiteturas do tipo U-Net podem ser exploradas para melhorar a SNR sem comprometer a morfologia dos traços detectados.
+
+Nesse contexto, o presente trabalho é motivado pela necessidade de desenvolver e avaliar uma abordagem de denoising especificamente voltada para imagens esparsas de traços de partículas, utilizando como base dados simulados com verdade conhecida para treinamento supervisionado. A escolha de uma arquitetura do tipo U-Net se justifica por sua capacidade de combinar informação multi-escala e preservação de detalhes espaciais, características fundamentais para esse tipo de aplicação. Espera-se, com isso, obter imagens com maior qualidade para etapas posteriores de análise, mantendo a integridade geométrica e fotométrica das estruturas associadas aos eventos físicos de interesse.
+
+
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 \chapter{CYGNO Experiment}
